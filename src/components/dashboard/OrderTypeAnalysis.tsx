@@ -13,13 +13,21 @@ export function OrderTypeAnalysis({ trades }: OrderTypeAnalysisProps) {
   const data = types.map((type) => {
     const filtered = trades.filter((t) => t.orderType === type);
     const wins = filtered.filter((t) => t.pnl > 0).length;
+    const totalPnl = filtered.reduce((s, t) => s + t.pnl, 0);
     return {
       type: type.charAt(0).toUpperCase() + type.slice(1),
       count: filtered.length,
-      pnl: filtered.reduce((s, t) => s + t.pnl, 0),
+      pnl: totalPnl,
       winRate: filtered.length > 0 ? (wins / filtered.length) * 100 : 0,
+      avgPnl: filtered.length > 0 ? totalPnl / filtered.length : 0,
     };
   });
+
+  const best = [...data].filter((d) => d.count > 0).sort((a, b) => {
+    const scoreA = a.winRate * 0.5 + (a.avgPnl > 0 ? 50 : 0);
+    const scoreB = b.winRate * 0.5 + (b.avgPnl > 0 ? 50 : 0);
+    return scoreB - scoreA;
+  })[0];
 
   return (
     <motion.div
@@ -59,6 +67,9 @@ export function OrderTypeAnalysis({ trades }: OrderTypeAnalysisProps) {
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground">{d.count} trades</span>
               <span className="text-muted-foreground">WR: {d.winRate.toFixed(0)}%</span>
+              <span className={`font-mono ${d.avgPnl >= 0 ? "text-profit/70" : "text-loss/70"}`}>
+                avg {formatPnl(d.avgPnl)}
+              </span>
               <span className={`font-mono font-semibold ${d.pnl >= 0 ? "text-profit" : "text-loss"}`}>
                 {formatPnl(d.pnl)}
               </span>
@@ -66,6 +77,16 @@ export function OrderTypeAnalysis({ trades }: OrderTypeAnalysisProps) {
           </div>
         ))}
       </div>
+
+      {best && best.count > 0 && (
+        <div className="mt-4 p-2.5 rounded-md border border-primary/30 bg-primary/5">
+          <span className="text-xs text-foreground">
+            <span className="font-semibold text-primary">Best: {best.type}</span>
+            {" — "}
+            {best.winRate.toFixed(0)}% win rate, {formatPnl(best.avgPnl)} avg PnL
+          </span>
+        </div>
+      )}
     </motion.div>
   );
 }

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { InstrumentInfo, DERIVERSE_PROGRAM_ID } from "@/lib/deriverse-client";
 import { formatCurrency } from "@/lib/mock-data";
@@ -11,6 +12,16 @@ interface LiveMarketDataProps {
 }
 
 export function LiveMarketData({ instruments, isLive, isLoading, lastUpdated }: LiveMarketDataProps) {
+  const summary = useMemo(() => {
+    if (instruments.length === 0) return null;
+    const totalVolume = instruments.reduce((s, i) => s + i.header.dayCrncyTokens, 0);
+    const avgSpread = instruments.reduce((s, i) => s + i.header.spread, 0) / instruments.length;
+    const sorted = [...instruments].sort((a, b) => b.header.change24h - a.header.change24h);
+    const topGainer = sorted[0];
+    const topLoser = sorted[sorted.length - 1];
+    return { totalVolume, avgSpread, topGainer, topLoser };
+  }, [instruments]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -59,6 +70,8 @@ export function LiveMarketData({ instruments, isLive, isLoading, lastUpdated }: 
                 <th className="text-right py-1.5 px-2 font-medium">Bid</th>
                 <th className="text-right py-1.5 px-2 font-medium">Ask</th>
                 <th className="text-right py-1.5 px-2 font-medium">Spread</th>
+                <th className="text-right py-1.5 px-2 font-medium">High / Low</th>
+                <th className="text-right py-1.5 px-2 font-medium">Vol%</th>
                 <th className="text-right py-1.5 px-2 font-medium">Volume</th>
                 <th className="text-right py-1.5 px-2 font-medium">OI</th>
                 <th className="text-right py-1.5 pl-2 font-medium">Funding</th>
@@ -92,6 +105,14 @@ export function LiveMarketData({ instruments, isLive, isLoading, lastUpdated }: 
                     <td className="text-right py-2 px-2 font-mono text-muted-foreground">
                       ${h.spread < 0.01 ? h.spread.toFixed(6) : h.spread.toFixed(2)}
                     </td>
+                    <td className="text-right py-2 px-2 font-mono text-muted-foreground whitespace-nowrap">
+                      <span className="text-profit/70">H:{h.dayHigh < 1 ? h.dayHigh.toFixed(4) : formatCurrency(h.dayHigh)}</span>
+                      {" / "}
+                      <span className="text-loss/70">L:{h.dayLow < 1 ? h.dayLow.toFixed(4) : formatCurrency(h.dayLow)}</span>
+                    </td>
+                    <td className={`text-right py-2 px-2 font-mono ${h.dayVolatility >= 3 ? "text-warning" : "text-muted-foreground"}`}>
+                      {h.dayVolatility.toFixed(2)}%
+                    </td>
                     <td className="text-right py-2 px-2 font-mono text-muted-foreground">
                       ${formatCurrency(h.dayCrncyTokens)}
                     </td>
@@ -106,6 +127,36 @@ export function LiveMarketData({ instruments, isLive, isLoading, lastUpdated }: 
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {summary && !isLoading && (
+        <div className="mt-4 pt-3 border-t border-border/50">
+          <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Market Summary</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-secondary/20 rounded-md p-2">
+              <span className="text-[10px] text-muted-foreground block">Total 24h Volume</span>
+              <span className="text-sm font-mono font-semibold text-foreground">${formatCurrency(summary.totalVolume)}</span>
+            </div>
+            <div className="bg-secondary/20 rounded-md p-2">
+              <span className="text-[10px] text-muted-foreground block">Avg Spread</span>
+              <span className="text-sm font-mono font-semibold text-foreground">
+                ${summary.avgSpread < 0.01 ? summary.avgSpread.toFixed(6) : summary.avgSpread.toFixed(2)}
+              </span>
+            </div>
+            <div className="bg-secondary/20 rounded-md p-2">
+              <span className="text-[10px] text-muted-foreground block">Top Gainer</span>
+              <span className="text-sm font-mono font-semibold text-profit">
+                {summary.topGainer.header.symbol} +{summary.topGainer.header.change24h.toFixed(2)}%
+              </span>
+            </div>
+            <div className="bg-secondary/20 rounded-md p-2">
+              <span className="text-[10px] text-muted-foreground block">Top Loser</span>
+              <span className="text-sm font-mono font-semibold text-loss">
+                {summary.topLoser.header.symbol} {summary.topLoser.header.change24h.toFixed(2)}%
+              </span>
+            </div>
+          </div>
         </div>
       )}
 

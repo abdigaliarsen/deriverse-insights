@@ -177,7 +177,7 @@ const Dashboard = () => {
           {isLoading ? (
             <ChartSkeleton />
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
               <div className="lg:col-span-2">
                 <PnlChart data={dailyPnl} equityData={equityCurve} />
               </div>
@@ -195,7 +195,7 @@ const Dashboard = () => {
         </ErrorBoundary>
 
         {/* Heatmaps Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
           <ErrorBoundary fallbackTitle="Calendar heatmap failed to load">
             <CalendarHeatmap trades={trades} />
           </ErrorBoundary>
@@ -225,7 +225,7 @@ const Dashboard = () => {
         </ErrorBoundary>
 
         {/* Deriverse SDK Panels */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
           <ErrorBoundary fallbackTitle="Market data failed to load">
             <LiveMarketData
               instruments={deriverse.instruments}
@@ -245,7 +245,7 @@ const Dashboard = () => {
         </div>
 
         {/* Symbol + Correlation Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           <ErrorBoundary fallbackTitle="Symbol perf failed to load">
             <SymbolPerformance data={symbolStats} />
           </ErrorBoundary>
@@ -255,7 +255,7 @@ const Dashboard = () => {
         </div>
 
         {/* Analysis Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
           <ErrorBoundary fallbackTitle="Order analysis failed to load">
             <OrderTypeAnalysis trades={trades} />
           </ErrorBoundary>
@@ -268,7 +268,7 @@ const Dashboard = () => {
         </div>
 
         {/* Distribution + Period + Timeline Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
           <ErrorBoundary fallbackTitle="Distribution failed to load">
             <TradeDistribution trades={trades} />
           </ErrorBoundary>

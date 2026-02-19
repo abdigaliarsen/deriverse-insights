@@ -78,6 +78,9 @@ export function PeriodComparison({ trades }: PeriodComparisonProps) {
       <MetricRow label="Avg PnL" first={first.avgPnl} second={second.avgPnl} format={(v) => formatPnl(v)} />
       <MetricRow label="Fees" first={first.totalFees} second={second.totalFees} format={(v) => `$${v.toFixed(0)}`} higherIsBetter={false} />
       <MetricRow label="Profit Factor" first={first.profitFactor} second={second.profitFactor} format={(v) => v === Infinity ? "∞" : v.toFixed(2)} />
+      <MetricRow label="Max Drawdown" first={first.maxDrawdownPct} second={second.maxDrawdownPct} format={(v) => `${v.toFixed(1)}%`} higherIsBetter={false} />
+      <MetricRow label="Best Trade" first={first.bestTrade} second={second.bestTrade} format={(v) => formatPnl(v)} />
+      <MetricRow label="Worst Trade" first={first.worstTrade} second={second.worstTrade} format={(v) => formatPnl(v)} />
     </motion.div>
   );
 }

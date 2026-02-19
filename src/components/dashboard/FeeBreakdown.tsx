@@ -98,6 +98,32 @@ export function FeeBreakdownChart({ data, totalFees, trades }: FeeBreakdownProps
               </div>
             ))}
           </div>
+
+          {/* Fee Efficiency */}
+          {(() => {
+            const avgFee = trades.length > 0 ? totalFees / trades.length : 0;
+            const grossProfit = trades.filter((t) => t.pnl > 0).reduce((s, t) => s + t.pnl, 0);
+            const feePctProfit = grossProfit > 0 ? (totalFees / grossProfit) * 100 : 0;
+            const totalVolume = trades.reduce((s, t) => s + Math.abs(t.pnl) + t.fees, 0);
+            const netImpact = totalVolume > 0 ? (totalFees / totalVolume) * 100 : 0;
+            return (
+              <div className="mt-3 pt-3 border-t border-border/50 space-y-1.5">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Fee Efficiency</span>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Avg Fee / Trade</span>
+                  <span className="font-mono text-foreground">${avgFee.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Fee % of Gross Profit</span>
+                  <span className={`font-mono ${feePctProfit > 20 ? "text-loss" : "text-foreground"}`}>{feePctProfit.toFixed(1)}%</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Net Impact (% of volume)</span>
+                  <span className="font-mono text-foreground">{netImpact.toFixed(2)}%</span>
+                </div>
+              </div>
+            );
+          })()}
         </>
       ) : (
         <div className="h-[200px]">

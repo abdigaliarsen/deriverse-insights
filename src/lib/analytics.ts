@@ -199,6 +199,9 @@ export interface PeriodStats {
   avgPnl: number;
   totalFees: number;
   profitFactor: number;
+  maxDrawdownPct: number;
+  bestTrade: number;
+  worstTrade: number;
 }
 
 export function calculatePeriodComparison(trades: Trade[]): { first: PeriodStats; second: PeriodStats } | null {
@@ -216,6 +219,20 @@ export function calculatePeriodComparison(trades: Trade[]): { first: PeriodStats
     const grossLoss = Math.abs(losses.reduce((s, t) => s + t.pnl, 0));
     const grossProfit = wins.reduce((s, t) => s + t.pnl, 0);
 
+    // Max drawdown %
+    let peak = 0;
+    let cumPnl = 0;
+    let maxDd = 0;
+    for (const t of group) {
+      cumPnl += t.pnl;
+      if (cumPnl > peak) peak = cumPnl;
+      const dd = peak > 0 ? ((peak - cumPnl) / peak) * 100 : 0;
+      if (dd > maxDd) maxDd = dd;
+    }
+
+    const bestTrade = group.length > 0 ? Math.max(...group.map((t) => t.pnl)) : 0;
+    const worstTrade = group.length > 0 ? Math.min(...group.map((t) => t.pnl)) : 0;
+
     return {
       label,
       totalPnl,
@@ -224,6 +241,9 @@ export function calculatePeriodComparison(trades: Trade[]): { first: PeriodStats
       avgPnl: group.length > 0 ? totalPnl / group.length : 0,
       totalFees: group.reduce((s, t) => s + t.fees, 0),
       profitFactor: grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0,
+      maxDrawdownPct: maxDd,
+      bestTrade,
+      worstTrade,
     };
   }
 

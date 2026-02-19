@@ -116,6 +116,56 @@ export function CorrelationMatrix({ trades }: CorrelationMatrixProps) {
         </div>
         <span className="text-[9px] text-loss">+1 (correlated)</span>
       </div>
+
+      {/* Diversification Score */}
+      {(() => {
+        const offDiag = result.entries.map((e) => Math.abs(e.correlation));
+        const avgAbsCorr = offDiag.length > 0 ? offDiag.reduce((s, v) => s + v, 0) / offDiag.length : 0;
+        const score = Math.round(Math.max(0, Math.min(100, 100 - avgAbsCorr * 100)));
+        const scoreColor = score > 70 ? "text-profit" : score >= 40 ? "text-warning" : "text-loss";
+        const barColor = score > 70 ? "bg-profit" : score >= 40 ? "bg-warning" : "bg-loss";
+        return (
+          <div className="mt-4 pt-3 border-t border-border/50">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Diversification Score</span>
+              <span className={`text-sm font-mono font-bold ${scoreColor}`}>{score}/100</span>
+            </div>
+            <div className="w-full h-2 bg-secondary/40 rounded-full overflow-hidden">
+              <div className={`h-full rounded-full ${barColor}`} style={{ width: `${score}%` }} />
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Notable Pairs */}
+      {result.entries.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-border/50 space-y-2">
+          <div>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Most Correlated</span>
+            {[...result.entries]
+              .sort((a, b) => b.correlation - a.correlation)
+              .slice(0, 2)
+              .map((e) => (
+                <div key={`${e.symbolA}-${e.symbolB}`} className="flex items-center justify-between text-xs mt-1">
+                  <span className="text-foreground font-mono">{e.symbolA.replace("-PERP", "")} ↔ {e.symbolB.replace("-PERP", "")}</span>
+                  <span className="font-mono text-loss">r = {e.correlation.toFixed(3)}</span>
+                </div>
+              ))}
+          </div>
+          <div>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Best Diversifiers</span>
+            {[...result.entries]
+              .sort((a, b) => a.correlation - b.correlation)
+              .slice(0, 2)
+              .map((e) => (
+                <div key={`${e.symbolA}-${e.symbolB}`} className="flex items-center justify-between text-xs mt-1">
+                  <span className="text-foreground font-mono">{e.symbolA.replace("-PERP", "")} ↔ {e.symbolB.replace("-PERP", "")}</span>
+                  <span className="font-mono text-primary">r = {e.correlation.toFixed(3)}</span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

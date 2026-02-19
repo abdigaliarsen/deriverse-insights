@@ -20,6 +20,31 @@ interface TradeDistributionProps {
 export function TradeDistribution({ trades }: TradeDistributionProps) {
   const buckets = useMemo(() => calculatePnlDistribution(trades, 20), [trades]);
 
+  const distStats = useMemo(() => {
+    if (trades.length === 0) return null;
+    const pnls = trades.map((t) => t.pnl).sort((a, b) => a - b);
+    const n = pnls.length;
+
+    // Median
+    const median = n % 2 === 0 ? (pnls[n / 2 - 1] + pnls[n / 2]) / 2 : pnls[Math.floor(n / 2)];
+
+    // Std Dev
+    const mean = pnls.reduce((s, v) => s + v, 0) / n;
+    const variance = pnls.reduce((s, v) => s + (v - mean) ** 2, 0) / n;
+    const stdDev = Math.sqrt(variance);
+
+    // Skewness
+    const skewness = n >= 3
+      ? (pnls.reduce((s, v) => s + ((v - mean) / stdDev) ** 3, 0) * n) / ((n - 1) * (n - 2))
+      : 0;
+
+    // Percentiles
+    const p10 = pnls[Math.floor(n * 0.1)];
+    const p90 = pnls[Math.floor(n * 0.9)];
+
+    return { median, stdDev, skewness: isFinite(skewness) ? skewness : 0, p10, p90 };
+  }, [trades]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -62,6 +87,36 @@ export function TradeDistribution({ trades }: TradeDistributionProps) {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {distStats && (
+        <div className="mt-4 pt-3 border-t border-border/50">
+          <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Distribution Stats</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-secondary/20 rounded-md p-2">
+              <span className="text-[10px] text-muted-foreground block">Median PnL</span>
+              <span className={`text-sm font-mono font-semibold ${distStats.median >= 0 ? "text-profit" : "text-loss"}`}>
+                ${distStats.median.toFixed(2)}
+              </span>
+            </div>
+            <div className="bg-secondary/20 rounded-md p-2">
+              <span className="text-[10px] text-muted-foreground block">Std Dev</span>
+              <span className="text-sm font-mono font-semibold text-foreground">${distStats.stdDev.toFixed(2)}</span>
+            </div>
+            <div className="bg-secondary/20 rounded-md p-2">
+              <span className="text-[10px] text-muted-foreground block">Skewness</span>
+              <span className={`text-sm font-mono font-semibold ${distStats.skewness > 0 ? "text-profit" : distStats.skewness < 0 ? "text-loss" : "text-foreground"}`}>
+                {distStats.skewness > 0 ? "+" : ""}{distStats.skewness.toFixed(3)}
+              </span>
+            </div>
+            <div className="bg-secondary/20 rounded-md p-2">
+              <span className="text-[10px] text-muted-foreground block">P10 / P90</span>
+              <span className="text-sm font-mono font-semibold text-foreground">
+                ${distStats.p10.toFixed(0)} / ${distStats.p90.toFixed(0)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
