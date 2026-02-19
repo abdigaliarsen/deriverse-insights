@@ -237,7 +237,22 @@ const Dashboard = () => {
           <DrawdownAnalysis trades={trades} />
         </ErrorBoundary>
 
-        {/* Deriverse SDK Panels */}
+        {/* Tall Panels: Order Book + Correlation */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+          <ErrorBoundary fallbackTitle="Order book failed to load">
+            <OrderBookChart
+              orderBook={deriverse.orderBook}
+              instruments={deriverse.instruments}
+              selectedInstrument={deriverse.selectedInstrument}
+              onInstrumentChange={deriverse.setSelectedInstrument}
+            />
+          </ErrorBoundary>
+          <ErrorBoundary fallbackTitle="Correlation failed to load">
+            <CorrelationMatrix trades={trades} />
+          </ErrorBoundary>
+        </div>
+
+        {/* Medium Panels: Live Market Data + Symbol Performance */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
           <ErrorBoundary fallbackTitle="Market data failed to load">
             <LiveMarketData
@@ -247,49 +262,34 @@ const Dashboard = () => {
               lastUpdated={deriverse.lastUpdated}
             />
           </ErrorBoundary>
-          <ErrorBoundary fallbackTitle="Order book failed to load">
-            <OrderBookChart
-              orderBook={deriverse.orderBook}
-              instruments={deriverse.instruments}
-              selectedInstrument={deriverse.selectedInstrument}
-              onInstrumentChange={deriverse.setSelectedInstrument}
-            />
-          </ErrorBoundary>
-        </div>
-
-        {/* Symbol + Correlation Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           <ErrorBoundary fallbackTitle="Symbol perf failed to load">
             <SymbolPerformance data={symbolStats} />
           </ErrorBoundary>
-          <ErrorBoundary fallbackTitle="Correlation failed to load">
-            <CorrelationMatrix trades={trades} />
-          </ErrorBoundary>
         </div>
 
-        {/* Analysis Row */}
+        {/* Charts Row: Timeline + Distribution + Fee Breakdown */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-          <ErrorBoundary fallbackTitle="Order analysis failed to load">
-            <OrderTypeAnalysis trades={trades} />
+          <ErrorBoundary fallbackTitle="Timeline failed to load">
+            <TradeTimeline trades={trades} />
+          </ErrorBoundary>
+          <ErrorBoundary fallbackTitle="Distribution failed to load">
+            <TradeDistribution trades={trades} />
           </ErrorBoundary>
           <ErrorBoundary fallbackTitle="Fee breakdown failed to load">
             <FeeBreakdownChart data={feeBreakdown} totalFees={stats.totalFees} trades={trades} />
           </ErrorBoundary>
+        </div>
+
+        {/* Compact Row: Leverage + Order Type + Period Comparison */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
           <ErrorBoundary fallbackTitle="Leverage analysis failed to load">
             <LeverageAnalysis trades={trades} />
           </ErrorBoundary>
-        </div>
-
-        {/* Distribution + Period + Timeline Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-          <ErrorBoundary fallbackTitle="Distribution failed to load">
-            <TradeDistribution trades={trades} />
+          <ErrorBoundary fallbackTitle="Order analysis failed to load">
+            <OrderTypeAnalysis trades={trades} />
           </ErrorBoundary>
           <ErrorBoundary fallbackTitle="Period comparison failed to load">
             <PeriodComparison trades={trades} />
-          </ErrorBoundary>
-          <ErrorBoundary fallbackTitle="Timeline failed to load">
-            <TradeTimeline trades={trades} />
           </ErrorBoundary>
         </div>
 
