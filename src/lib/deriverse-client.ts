@@ -1,9 +1,11 @@
 import { Engine, PROGRAM_ID } from "@deriverse/kit";
 import { createSolanaRpc } from "@solana/kit";
 
+const HELIUS_KEY = import.meta.env.VITE_HELIUS_API_KEY ?? "";
+
 const MAINNET_RPCS = [
   "https://api.mainnet-beta.solana.com",
-  "https://mainnet.helius-rpc.com/?api-key=9f3b050a-4edd-4a78-ba63-d1a114e1913a",
+  ...(HELIUS_KEY ? [`https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`] : []),
 ];
 
 // Well-known Solana token mints → symbols

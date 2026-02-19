@@ -12,6 +12,7 @@ interface WalletInputProps {
   error: string | null;
   onRefresh: () => void;
   tradeCount: number;
+  children?: React.ReactNode;
 }
 
 export function WalletInput({
@@ -23,6 +24,7 @@ export function WalletInput({
   error,
   onRefresh,
   tradeCount,
+  children,
 }: WalletInputProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(wallet);
@@ -95,31 +97,39 @@ export function WalletInput({
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <div className="flex items-center gap-1.5">
-        <Wallet className="h-3 w-3 text-muted-foreground" />
-        <button
-          onClick={() => setIsEditing(true)}
-          className="text-xs font-mono text-muted-foreground hover:text-primary transition-colors"
-          title="Click to change wallet"
-        >
-          {truncated}
-        </button>
-        <a
-          href={solscanAccountUrl(wallet)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-muted-foreground/40 hover:text-primary transition-colors"
-        >
-          <ExternalLink className="h-2.5 w-2.5" />
-        </a>
-        {!isLoading && (
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+          <Wallet className="h-3 w-3 text-muted-foreground" />
           <button
-            onClick={onRefresh}
-            className="p-0.5 rounded hover:bg-secondary/50 text-muted-foreground hover:text-primary transition-colors"
-            title="Refresh trade data"
+            onClick={() => setIsEditing(true)}
+            className="text-xs font-mono text-muted-foreground hover:text-primary transition-colors"
+            title="Click to change wallet"
           >
-            <RefreshCw className="h-3 w-3" />
+            {truncated}
           </button>
+          <a
+            href={solscanAccountUrl(wallet)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground/40 hover:text-primary transition-colors"
+          >
+            <ExternalLink className="h-2.5 w-2.5" />
+          </a>
+          {!isLoading && (
+            <button
+              onClick={onRefresh}
+              className="p-0.5 rounded hover:bg-secondary/50 text-muted-foreground hover:text-primary transition-colors"
+              title="Refresh trade data"
+            >
+              <RefreshCw className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+        {children && (
+          <>
+            <span className="w-px h-4 bg-border" />
+            {children}
+          </>
         )}
       </div>
 

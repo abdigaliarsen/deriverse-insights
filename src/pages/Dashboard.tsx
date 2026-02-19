@@ -33,6 +33,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StatsSkeleton, ChartSkeleton, RiskMetricsSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { WalletInput } from "@/components/dashboard/WalletInput";
 import { useWalletTrades } from "@/hooks/use-wallet-trades";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Activity, Filter, ExternalLink } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
@@ -120,7 +121,6 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <ExportButton trades={trades} stats={stats as unknown as Record<string, unknown>} />
             <WalletInput
               wallet={walletTrades.wallet}
               onWalletChange={walletTrades.setWallet}
@@ -130,7 +130,10 @@ const Dashboard = () => {
               error={walletTrades.error}
               onRefresh={walletTrades.refresh}
               tradeCount={walletTrades.tradeCount}
-            />
+            >
+              <ExportButton trades={trades} stats={stats as unknown as Record<string, unknown>} />
+              <ThemeToggle />
+            </WalletInput>
             {deriverse.isLive ? (
               <a
                 href="https://solscan.io/account/DRVSpZ2YUYYKgZP8XtLhAGtT1zYSCKzeHfb4DgRnrgqD"
