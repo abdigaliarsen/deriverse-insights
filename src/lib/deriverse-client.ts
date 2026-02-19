@@ -3,7 +3,7 @@ import { createSolanaRpc } from "@solana/kit";
 
 const MAINNET_RPCS = [
   "https://api.mainnet-beta.solana.com",
-  "https://mainnet.helius-rpc.com/?api-key=15b8e818-3be8-4b64-8597-52570318af68",
+  "https://mainnet.helius-rpc.com/?api-key=9f3b050a-4edd-4a78-ba63-d1a114e1913a",
 ];
 
 // Well-known Solana token mints → symbols
@@ -43,6 +43,28 @@ let engineInstance: Engine | null = null;
 let currentRpcIndex = 0;
 let tokenSymbolMap: Map<number, string> = new Map();
 
+/** Return the preferred (Helius) RPC URL for trade history fetching */
+export function getPreferredRpcUrl(): string {
+  return MAINNET_RPCS[1] || MAINNET_RPCS[0];
+}
+
+/** Resolve an instrument ID to its human-readable symbol (e.g. "SOL/USDC") */
+export function resolveSymbolForInstrId(instrId: number): string {
+  if (!engineInstance) return `INSTR-${instrId}`;
+  const instr = engineInstance.instruments.get(instrId);
+  if (!instr) return `INSTR-${instrId}`;
+  const h = instr.header;
+  return resolveSymbol(h.assetTokenId, h.crncyTokenId);
+}
+
+/** Check if an instrument supports perpetual trading */
+export function getInstrumentType(instrId: number): "spot" | "perp" {
+  if (!engineInstance) return "spot";
+  const instr = engineInstance.instruments.get(instrId);
+  if (!instr) return "spot";
+  return (instr.header.mask & 8) !== 0 ? "perp" : "spot";
+}
+
 function createEngine(): Engine {
   const rpcUrl = MAINNET_RPCS[currentRpcIndex % MAINNET_RPCS.length];
   const rpc = createSolanaRpc(rpcUrl);
@@ -50,7 +72,7 @@ function createEngine(): Engine {
   return new Engine(rpc as any, { uiNumbers: true });
 }
 
-async function getInitializedEngine(): Promise<Engine> {
+export async function getInitializedEngine(): Promise<Engine> {
   if (engineInstance && engineInstance.instruments?.size > 0) {
     return engineInstance;
   }

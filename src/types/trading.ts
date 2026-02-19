@@ -13,6 +13,11 @@ export interface Trade {
   orderType: "market" | "limit" | "stop";
   notes: string;
   leverage: number;
+  // On-chain metadata (optional)
+  txSignature?: string;
+  entryTxSignature?: string;
+  instrId?: number;
+  marketType?: "spot" | "perp";
 }
 
 export interface DailyPnl {

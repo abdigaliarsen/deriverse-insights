@@ -32,10 +32,14 @@ import { LiveMarketData } from "@/components/dashboard/LiveMarketData";
 import { OrderBookChart } from "@/components/dashboard/OrderBookChart";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StatsSkeleton, ChartSkeleton, TableSkeleton, RiskMetricsSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { WalletInput } from "@/components/dashboard/WalletInput";
+import { useWalletTrades } from "@/hooks/use-wallet-trades";
 import { Activity, Filter, ExternalLink } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 const Dashboard = () => {
+  const walletTrades = useWalletTrades();
+
   const {
     trades,
     stats,
@@ -49,7 +53,7 @@ const Dashboard = () => {
     setSelectedSymbol,
     dateRange,
     setDateRange,
-  } = useTradingData();
+  } = useTradingData(walletTrades.trades.length > 0 ? walletTrades.trades : undefined);
 
   const deriverse = useDeriverseData();
   const isMobile = useIsMobile();
@@ -109,8 +113,18 @@ const Dashboard = () => {
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Trading Journal & Portfolio</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <ExportButton trades={trades} stats={stats as unknown as Record<string, unknown>} />
+            <WalletInput
+              wallet={walletTrades.wallet}
+              onWalletChange={walletTrades.setWallet}
+              isLoading={walletTrades.isLoading}
+              isCached={walletTrades.isCached}
+              progress={walletTrades.progress}
+              error={walletTrades.error}
+              onRefresh={walletTrades.refresh}
+              tradeCount={walletTrades.tradeCount}
+            />
             {deriverse.isLive ? (
               <a
                 href="https://solscan.io/account/DRVSpZ2YUYYKgZP8XtLhAGtT1zYSCKzeHfb4DgRnrgqD"
