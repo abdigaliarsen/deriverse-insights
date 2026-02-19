@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   fetchAllInstruments,
   fetchOrderBook,
+  resetEngine,
   getMockMarketData,
   getMockOrderBook,
   InstrumentInfo,
@@ -28,6 +29,7 @@ export function useDeriverseData(): DeriverseDataState {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const failCountRef = useRef(0);
 
   const fetchData = useCallback(async () => {
     try {
@@ -36,16 +38,21 @@ export function useDeriverseData(): DeriverseDataState {
         setInstruments(data);
         setIsLive(true);
         setError(null);
+        failCountRef.current = 0;
       } else {
-        // Devnet returned empty, use mock
         setInstruments(getMockMarketData());
         setIsLive(false);
       }
     } catch {
-      // Devnet unavailable, use mock
+      failCountRef.current++;
+      // Reset engine after 2 consecutive failures to try alternate RPC
+      if (failCountRef.current >= 2) {
+        resetEngine();
+        failCountRef.current = 0;
+      }
       setInstruments(getMockMarketData());
       setIsLive(false);
-      setError("Devnet unavailable — showing mock data");
+      setError("Solana RPC unavailable — showing mock data");
     }
     setLastUpdated(new Date());
     setIsLoading(false);

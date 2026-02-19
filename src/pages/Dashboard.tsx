@@ -32,7 +32,7 @@ import { LiveMarketData } from "@/components/dashboard/LiveMarketData";
 import { OrderBookChart } from "@/components/dashboard/OrderBookChart";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { StatsSkeleton, ChartSkeleton, TableSkeleton, RiskMetricsSkeleton } from "@/components/dashboard/DashboardSkeleton";
-import { Activity, Filter } from "lucide-react";
+import { Activity, Filter, ExternalLink } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 
 const Dashboard = () => {
@@ -111,10 +111,23 @@ const Dashboard = () => {
           </div>
           <div className="flex items-center gap-2">
             <ExportButton trades={trades} stats={stats as unknown as Record<string, unknown>} />
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span className={`w-1.5 h-1.5 rounded-full ${deriverse.isLive ? "bg-profit" : "bg-warning"} animate-pulse-glow`} />
-              {deriverse.isLive ? "Solana Devnet" : "Offline Mode"}
-            </span>
+            {deriverse.isLive ? (
+              <a
+                href="https://solscan.io/account/DRVSpZ2YUYYKgZP8XtLhAGtT1zYSCKzeHfb4DgRnrgqD"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-profit animate-pulse-glow" />
+                Solana Mainnet
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            ) : (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse-glow" />
+                Offline Mode
+              </span>
+            )}
           </div>
         </div>
       </header>
@@ -151,7 +164,7 @@ const Dashboard = () => {
           {isLoading ? (
             <StatsSkeleton />
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-start">
               <div className="lg:col-span-1">
                 <PerformanceScore trades={trades} />
               </div>

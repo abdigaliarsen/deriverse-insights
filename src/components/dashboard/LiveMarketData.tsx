@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { InstrumentInfo, DERIVERSE_PROGRAM_ID } from "@/lib/deriverse-client";
+import { InstrumentInfo, DERIVERSE_PROGRAM_ID, solscanMintUrl, solscanAccountUrl } from "@/lib/deriverse-client";
 import { formatCurrency } from "@/lib/mock-data";
 import { Wifi, WifiOff, ExternalLink } from "lucide-react";
 
@@ -84,9 +84,33 @@ export function LiveMarketData({ instruments, isLive, isLoading, lastUpdated }: 
                   <tr key={instr.id} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">
                     <td className="py-2 pr-3">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-semibold text-foreground">{h.symbol}</span>
+                        {instr.assetMint ? (
+                          <a
+                            href={solscanMintUrl(instr.assetMint)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-mono font-semibold text-foreground hover:text-primary transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {h.symbol}
+                          </a>
+                        ) : (
+                          <span className="font-mono font-semibold text-foreground">{h.symbol}</span>
+                        )}
                         {instr.type === "perp" && (
                           <span className="px-1 py-0.5 text-[9px] bg-primary/20 text-primary rounded">PERP</span>
+                        )}
+                        {instr.marketAddress && (
+                          <a
+                            href={solscanAccountUrl(instr.marketAddress)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-muted-foreground/40 hover:text-primary transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                            title="View market account on Solscan"
+                          >
+                            <ExternalLink className="h-2.5 w-2.5" />
+                          </a>
                         )}
                       </div>
                     </td>
@@ -167,7 +191,7 @@ export function LiveMarketData({ instruments, isLive, isLoading, lastUpdated }: 
           </span>
         </div>
         <a
-          href={`https://solscan.io/account/${DERIVERSE_PROGRAM_ID}?cluster=devnet`}
+          href={`https://solscan.io/account/${DERIVERSE_PROGRAM_ID}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors"

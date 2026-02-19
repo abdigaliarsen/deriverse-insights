@@ -6,7 +6,8 @@ import { sanitizeInput } from "@/lib/sanitize";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTradeTags } from "@/hooks/use-trade-tags";
 import { TagManager, TagBadges } from "./TagManager";
-import { ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
+import { ChevronDown, ChevronUp, MessageSquare, ExternalLink } from "lucide-react";
+import { getMintForSymbol, solscanMintUrl } from "@/lib/deriverse-client";
 
 interface TradeHistoryProps {
   trades: Trade[];
@@ -88,7 +89,25 @@ export function TradeHistory({ trades }: TradeHistoryProps) {
                     className="border-b border-border/30 hover:bg-secondary/30 transition-colors cursor-pointer"
                     onClick={() => setExpandedId(expandedId === trade.id ? null : trade.id)}
                   >
-                    <td className="py-2 px-2 font-mono font-medium text-foreground">{trade.symbol}</td>
+                    <td className="py-2 px-2">
+                      {(() => {
+                        const mint = getMintForSymbol(trade.symbol);
+                        return mint ? (
+                          <a
+                            href={solscanMintUrl(mint)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-mono font-medium text-foreground hover:text-primary transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {trade.symbol}
+                            <ExternalLink className="h-2.5 w-2.5 text-muted-foreground/30" />
+                          </a>
+                        ) : (
+                          <span className="font-mono font-medium text-foreground">{trade.symbol}</span>
+                        );
+                      })()}
+                    </td>
                     <td className="py-2 px-2">
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${
                         trade.side === "long" ? "bg-profit/15 text-profit" : "bg-loss/15 text-loss"

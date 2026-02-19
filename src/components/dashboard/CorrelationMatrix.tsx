@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Trade } from "@/types/trading";
 import { calculateCorrelationMatrix, CorrelationResult } from "@/lib/correlation";
+import { getMintForSymbol, solscanMintUrl } from "@/lib/deriverse-client";
 
 function corrColor(corr: number): string {
   if (corr >= 0.6) return "bg-loss/60";
@@ -70,9 +71,15 @@ export function CorrelationMatrix({ trades }: CorrelationMatrixProps) {
           {result.symbols.map((sym, i) => (
             <div key={sym} className="flex items-center">
               <div className="w-16 pr-1">
-                <span className="text-[9px] font-mono text-muted-foreground truncate block text-right">
-                  {sym.replace("-PERP", "")}
-                </span>
+                {(() => {
+                  const mint = getMintForSymbol(sym);
+                  const label = sym.replace("-PERP", "");
+                  return mint ? (
+                    <a href={solscanMintUrl(mint)} target="_blank" rel="noopener noreferrer" className="text-[9px] font-mono text-muted-foreground truncate block text-right hover:text-primary transition-colors">{label}</a>
+                  ) : (
+                    <span className="text-[9px] font-mono text-muted-foreground truncate block text-right">{label}</span>
+                  );
+                })()}
               </div>
               {result.symbols.map((_, j) => {
                 const corr = result.matrix[i][j];

@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { OrderBookData, InstrumentInfo } from "@/lib/deriverse-client";
+import { OrderBookData, InstrumentInfo, DERIVERSE_PROGRAM_ID, solscanAccountUrl, solscanMintUrl } from "@/lib/deriverse-client";
 import { formatCurrency } from "@/lib/mock-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ExternalLink } from "lucide-react";
 
 interface OrderBookChartProps {
   orderBook: OrderBookData;
@@ -13,6 +14,7 @@ interface OrderBookChartProps {
 
 export function OrderBookChart({ orderBook, instruments, selectedInstrument, onInstrumentChange }: OrderBookChartProps) {
   const { bids, asks, midPrice, spread } = orderBook;
+  const currentInstr = instruments.find((i) => i.id === selectedInstrument);
 
   const maxCumSize = useMemo(() => {
     const maxBid = bids.length > 0 ? bids[bids.length - 1].cumSize : 0;
@@ -29,18 +31,31 @@ export function OrderBookChart({ orderBook, instruments, selectedInstrument, onI
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-foreground">Order Book Depth</h3>
-        <Select value={selectedInstrument} onValueChange={onInstrumentChange}>
-          <SelectTrigger className="w-[140px] h-7 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {instruments.map((instr) => (
-              <SelectItem key={instr.id} value={instr.id} className="text-xs">
-                {instr.header.symbol}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          {currentInstr?.marketAddress && (
+            <a
+              href={solscanAccountUrl(currentInstr.marketAddress)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground/50 hover:text-primary transition-colors"
+              title="View on-chain market account"
+            >
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
+          <Select value={selectedInstrument} onValueChange={onInstrumentChange}>
+            <SelectTrigger className="w-[140px] h-7 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {instruments.map((instr) => (
+                <SelectItem key={instr.id} value={instr.id} className="text-xs">
+                  {instr.header.symbol}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Mid price and spread */}
@@ -118,7 +133,29 @@ export function OrderBookChart({ orderBook, instruments, selectedInstrument, onI
       </div>
 
       <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50 text-[10px] text-muted-foreground">
-        <span>Cumulative depth chart</span>
+        <div className="flex items-center gap-2">
+          <span>On-chain depth</span>
+          {currentInstr?.assetMint && (
+            <a
+              href={solscanMintUrl(currentInstr.assetMint)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-1 py-0.5 bg-secondary/40 rounded hover:text-primary transition-colors"
+            >
+              {currentInstr.symbol.split("/")[0]}
+            </a>
+          )}
+          {currentInstr?.crncyMint && (
+            <a
+              href={solscanMintUrl(currentInstr.crncyMint)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-1 py-0.5 bg-secondary/40 rounded hover:text-primary transition-colors"
+            >
+              {currentInstr.symbol.split("/")[1]}
+            </a>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-sm bg-profit/40" /> Bids

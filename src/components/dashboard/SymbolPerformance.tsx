@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import { SymbolStats as SymbolStatsType } from "@/types/trading";
 import { formatPnl, formatCurrency } from "@/lib/mock-data";
+import { getMintForSymbol, solscanMintUrl } from "@/lib/deriverse-client";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
+import { ExternalLink } from "lucide-react";
 
 interface SymbolPerformanceProps {
   data: SymbolStatsType[];
@@ -41,9 +43,25 @@ export function SymbolPerformance({ data }: SymbolPerformanceProps) {
       </div>
 
       <div className="space-y-2 max-h-[180px] overflow-y-auto scrollbar-thin">
-        {data.map((s) => (
+        {data.map((s) => {
+          const mint = getMintForSymbol(s.symbol);
+          return (
           <div key={s.symbol} className="flex items-center justify-between text-xs py-1 border-b border-border/50 last:border-0">
-            <span className="font-mono font-medium text-foreground">{s.symbol}</span>
+            <div className="flex items-center gap-1">
+              {mint ? (
+                <a
+                  href={solscanMintUrl(mint)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono font-medium text-foreground hover:text-primary transition-colors"
+                >
+                  {s.symbol}
+                </a>
+              ) : (
+                <span className="font-mono font-medium text-foreground">{s.symbol}</span>
+              )}
+              {mint && <a href={solscanMintUrl(mint)} target="_blank" rel="noopener noreferrer" className="text-muted-foreground/30 hover:text-primary transition-colors"><ExternalLink className="h-2.5 w-2.5" /></a>}
+            </div>
             <div className="flex items-center gap-4">
               <span className="text-muted-foreground">{s.trades} trades</span>
               <span className="text-muted-foreground">WR: {s.winRate.toFixed(0)}%</span>
@@ -52,7 +70,8 @@ export function SymbolPerformance({ data }: SymbolPerformanceProps) {
               </span>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </motion.div>
   );
