@@ -7,6 +7,7 @@ import {
   calculateSymbolStats,
   calculateFeeBreakdown,
 } from "@/lib/mock-data";
+import { calculateEquityCurve } from "@/lib/analytics";
 
 export function useTradingData() {
   const allTrades = useMemo(() => generateMockTrades(200), []);
@@ -73,6 +74,7 @@ export function useTradingData() {
   const sessionPerf = useMemo(() => calculateSessionPerformance(filteredTrades), [filteredTrades]);
   const symbolStats = useMemo(() => calculateSymbolStats(filteredTrades), [filteredTrades]);
   const feeBreakdown = useMemo(() => calculateFeeBreakdown(filteredTrades), [filteredTrades]);
+  const equityCurve = useMemo(() => calculateEquityCurve(filteredTrades), [filteredTrades]);
 
   return {
     trades: filteredTrades,
@@ -82,6 +84,7 @@ export function useTradingData() {
     sessionPerf,
     symbolStats,
     feeBreakdown,
+    equityCurve,
     symbols,
     selectedSymbol,
     setSelectedSymbol,

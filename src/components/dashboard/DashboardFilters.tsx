@@ -1,4 +1,9 @@
-import { Calendar, Filter } from "lucide-react";
+import { useState } from "react";
+import { Calendar as CalendarIcon, Filter } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
 
 interface DashboardFiltersProps {
   symbols: string[];
@@ -22,6 +27,28 @@ export function DashboardFilters({
   dateRange,
   onDateRangeChange,
 }: DashboardFiltersProps) {
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  const isPresetActive = (days: number) =>
+    dateRange.from &&
+    Math.abs(Date.now() - dateRange.from.getTime() - days * 86400000) < 86400000;
+
+  const isCustom = dateRange.from && !presets.some((p) => isPresetActive(p.days));
+
+  const handleRangeSelect = (range: DateRange | undefined) => {
+    if (range?.from) {
+      onDateRangeChange({ from: range.from, to: range.to || range.from });
+      if (range.to) setCalendarOpen(false);
+    }
+  };
+
+  const formatRange = () => {
+    if (!dateRange.from) return "Pick dates";
+    const from = format(dateRange.from, "MMM d");
+    const to = dateRange.to ? format(dateRange.to, "MMM d") : "...";
+    return `${from} – ${to}`;
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="flex items-center gap-2">
@@ -39,29 +66,52 @@ export function DashboardFilters({
       </div>
 
       <div className="flex items-center gap-1">
-        <Calendar className="h-3.5 w-3.5 text-muted-foreground mr-1" />
-        {presets.map((p) => {
-          const isActive = dateRange.from &&
-            Math.abs(Date.now() - dateRange.from.getTime() - p.days * 86400000) < 86400000;
-          return (
+        <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground mr-1" />
+        {presets.map((p) => (
+          <button
+            key={p.label}
+            onClick={() =>
+              onDateRangeChange({
+                from: new Date(Date.now() - p.days * 86400000),
+                to: new Date(),
+              })
+            }
+            className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${
+              isPresetActive(p.days)
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+
+        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <PopoverTrigger asChild>
             <button
-              key={p.label}
-              onClick={() =>
-                onDateRangeChange({
-                  from: new Date(Date.now() - p.days * 86400000),
-                  to: new Date(),
-                })
-              }
               className={`px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${
-                isActive
+                isCustom
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               }`}
             >
-              {p.label}
+              {isCustom ? formatRange() : "Custom"}
             </button>
-          );
-        })}
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="range"
+              numberOfMonths={2}
+              selected={
+                dateRange.from
+                  ? { from: dateRange.from, to: dateRange.to || undefined }
+                  : undefined
+              }
+              onSelect={handleRangeSelect}
+              disabled={{ after: new Date() }}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );

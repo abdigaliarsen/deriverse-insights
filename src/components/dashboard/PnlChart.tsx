@@ -12,14 +12,20 @@ import {
   Bar,
 } from "recharts";
 import { DailyPnl } from "@/types/trading";
+import { EquityCurveEntry } from "@/lib/analytics";
 import { useState } from "react";
 
 interface PnlChartProps {
   data: DailyPnl[];
+  equityData: EquityCurveEntry[];
 }
 
-export function PnlChart({ data }: PnlChartProps) {
-  const [view, setView] = useState<"cumulative" | "daily" | "drawdown">("cumulative");
+type ViewType = "cumulative" | "daily" | "drawdown" | "equity";
+
+export function PnlChart({ data, equityData }: PnlChartProps) {
+  const [view, setView] = useState<ViewType>("cumulative");
+
+  const initialBalance = equityData.length > 0 ? equityData[0].equity - (equityData[0].equity - 10000) : 10000;
 
   return (
     <motion.div
@@ -31,7 +37,7 @@ export function PnlChart({ data }: PnlChartProps) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-foreground">PnL Performance</h3>
         <div className="flex gap-1">
-          {(["cumulative", "daily", "drawdown"] as const).map((v) => (
+          {(["cumulative", "daily", "drawdown", "equity"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -69,6 +75,46 @@ export function PnlChart({ data }: PnlChartProps) {
                 radius={[2, 2, 0, 0]}
               />
             </ComposedChart>
+          ) : view === "equity" ? (
+            <AreaChart data={equityData}>
+              <defs>
+                <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(175 80% 50%)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(175 80% 50%)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 14% 15%)" />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: "hsl(215 15% 55%)" }} tickFormatter={(v) => v.slice(5)} />
+              <YAxis tick={{ fontSize: 10, fill: "hsl(215 15% 55%)" }} tickFormatter={(v) => `$${v.toLocaleString()}`} />
+              <Tooltip
+                contentStyle={{
+                  background: "hsl(220 18% 10%)",
+                  border: "1px solid hsl(220 14% 18%)",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                }}
+                formatter={(value: number, name: string) => [
+                  `$${value.toFixed(2)}`,
+                  name === "highWaterMark" ? "High Water Mark" : "Equity",
+                ]}
+              />
+              <ReferenceLine y={initialBalance} stroke="hsl(215 15% 55%)" strokeDasharray="6 3" label={{ value: "Start", fill: "hsl(215 15% 55%)", fontSize: 10 }} />
+              <Area
+                type="monotone"
+                dataKey="highWaterMark"
+                stroke="hsl(38 92% 55%)"
+                fill="none"
+                strokeWidth={1}
+                strokeDasharray="4 4"
+              />
+              <Area
+                type="monotone"
+                dataKey="equity"
+                stroke="hsl(175 80% 50%)"
+                fill="url(#eqGrad)"
+                strokeWidth={2}
+              />
+            </AreaChart>
           ) : (
             <AreaChart data={data}>
               <defs>
