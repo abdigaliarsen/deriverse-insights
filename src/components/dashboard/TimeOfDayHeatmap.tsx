@@ -9,23 +9,22 @@ const GAP = 2;
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
-function pnlToColor(pnl: number, maxAbs: number, hasData: boolean): string {
-  if (!hasData) return "hsl(220 14% 12%)";
-  if (maxAbs === 0) return "hsl(220 14% 12%)";
+function pnlToClass(pnl: number, maxAbs: number, hasData: boolean): string {
+  if (!hasData || maxAbs === 0) return "bg-secondary/50";
   const t = Math.min(Math.abs(pnl) / maxAbs, 1);
   if (pnl > 0) {
-    if (t < 0.25) return "hsl(145 55% 22%)";
-    if (t < 0.5) return "hsl(145 60% 32%)";
-    if (t < 0.75) return "hsl(145 65% 40%)";
-    return "hsl(145 70% 48%)";
+    if (t < 0.25) return "bg-emerald-100 dark:bg-emerald-950/80";
+    if (t < 0.5) return "bg-emerald-300 dark:bg-emerald-800/90";
+    if (t < 0.75) return "bg-emerald-400 dark:bg-emerald-600";
+    return "bg-emerald-500 dark:bg-emerald-500";
   }
   if (pnl < 0) {
-    if (t < 0.25) return "hsl(0 50% 22%)";
-    if (t < 0.5) return "hsl(0 60% 32%)";
-    if (t < 0.75) return "hsl(0 68% 40%)";
-    return "hsl(0 72% 50%)";
+    if (t < 0.25) return "bg-red-100 dark:bg-red-950/80";
+    if (t < 0.5) return "bg-red-300 dark:bg-red-800/90";
+    if (t < 0.75) return "bg-red-400 dark:bg-red-600";
+    return "bg-red-500 dark:bg-red-500";
   }
-  return "hsl(220 14% 12%)";
+  return "bg-secondary/50";
 }
 
 interface TimeOfDayHeatmapProps {
@@ -81,15 +80,14 @@ export function TimeOfDayHeatmap({ trades }: TimeOfDayHeatmapProps) {
               <div className="flex" style={{ gap: GAP }}>
                 {HOURS.map((hour) => {
                   const cell = cells.find((c) => c.day === dayIdx && c.hour === hour);
+                  const isHovered = hoveredCell?.day === dayIdx && hoveredCell?.hour === hour;
                   return (
                     <div
                       key={hour}
-                      className="rounded-sm cursor-pointer hover:ring-1 hover:ring-foreground/50"
-                      style={{
-                        width: CELL,
-                        height: CELL,
-                        backgroundColor: pnlToColor(cell?.pnl || 0, maxAbsPnl, (cell?.tradeCount || 0) > 0),
-                      }}
+                      className={`rounded-sm cursor-pointer transition-colors ${
+                        pnlToClass(cell?.pnl || 0, maxAbsPnl, (cell?.tradeCount || 0) > 0)
+                      } ${isHovered ? "ring-1 ring-foreground/50" : "hover:ring-1 hover:ring-foreground/30"}`}
+                      style={{ width: CELL, height: CELL }}
                       onMouseEnter={() => setHoveredCell({ day: dayIdx, hour })}
                       onMouseLeave={() => setHoveredCell(null)}
                     />
@@ -109,15 +107,15 @@ export function TimeOfDayHeatmap({ trades }: TimeOfDayHeatmapProps) {
               <span className="text-foreground font-medium">
                 {DAYS[hoveredCell.day]} {hoveredCell.hour.toString().padStart(2, "0")}:00–{((hoveredCell.hour + 1) % 24).toString().padStart(2, "0")}:00
               </span>
-              <span className="mx-1.5 text-muted-foreground/50">·</span>
+              <span className="mx-1.5 text-muted-foreground/50">&middot;</span>
               <span className={hoveredData.pnl >= 0 ? "text-profit" : "text-loss"}>{formatPnl(hoveredData.pnl)}</span>
-              <span className="mx-1.5 text-muted-foreground/50">·</span>
+              <span className="mx-1.5 text-muted-foreground/50">&middot;</span>
               <span className="text-muted-foreground">{hoveredData.tradeCount} trades, {hoveredData.winRate.toFixed(0)}% win</span>
             </span>
           ) : (
             <span className="text-muted-foreground">
               {bestHour && <>Best: <span className="text-profit">{DAYS[bestHour.day]} {bestHour.hour.toString().padStart(2, "0")}:00 ({formatPnl(bestHour.pnl)})</span></>}
-              {bestHour && worstHour && <span className="mx-2">·</span>}
+              {bestHour && worstHour && <span className="mx-2">&middot;</span>}
               {worstHour && <>Worst: <span className="text-loss">{DAYS[worstHour.day]} {worstHour.hour.toString().padStart(2, "0")}:00 ({formatPnl(worstHour.pnl)})</span></>}
             </span>
           )}
