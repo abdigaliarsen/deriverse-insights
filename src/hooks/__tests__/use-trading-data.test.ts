@@ -1,10 +1,13 @@
 import { describe, it, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { useTradingData } from "../use-trading-data";
+import { generateMockTrades } from "@/lib/mock-data";
+
+const mockTrades = generateMockTrades(200);
 
 describe("useTradingData", () => {
   it("initializes with default values", () => {
-    const { result } = renderHook(() => useTradingData());
+    const { result } = renderHook(() => useTradingData(mockTrades));
     expect(result.current.selectedSymbol).toBe("all");
     expect(result.current.dateRange.from).toBeInstanceOf(Date);
     expect(result.current.dateRange.to).toBeInstanceOf(Date);
@@ -12,7 +15,7 @@ describe("useTradingData", () => {
   });
 
   it("filters trades by symbol", () => {
-    const { result } = renderHook(() => useTradingData());
+    const { result } = renderHook(() => useTradingData(mockTrades));
     const firstSymbol = result.current.symbols[0];
 
     act(() => {
@@ -25,7 +28,7 @@ describe("useTradingData", () => {
   });
 
   it("filters trades by date range", () => {
-    const { result } = renderHook(() => useTradingData());
+    const { result } = renderHook(() => useTradingData(mockTrades));
 
     const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const to = new Date();
@@ -41,7 +44,7 @@ describe("useTradingData", () => {
   });
 
   it("computes correct stats", () => {
-    const { result } = renderHook(() => useTradingData());
+    const { result } = renderHook(() => useTradingData(mockTrades));
     const { stats, trades } = result.current;
 
     expect(stats.tradeCount).toBe(trades.length);
@@ -52,7 +55,7 @@ describe("useTradingData", () => {
   });
 
   it("provides computed data arrays", () => {
-    const { result } = renderHook(() => useTradingData());
+    const { result } = renderHook(() => useTradingData(mockTrades));
 
     expect(Array.isArray(result.current.dailyPnl)).toBe(true);
     expect(Array.isArray(result.current.sessionPerf)).toBe(true);
@@ -62,7 +65,7 @@ describe("useTradingData", () => {
   });
 
   it("updates symbols list from all trades", () => {
-    const { result } = renderHook(() => useTradingData());
+    const { result } = renderHook(() => useTradingData(mockTrades));
     const { symbols, allTrades } = result.current;
 
     const expectedSymbols = [...new Set(allTrades.map((t) => t.symbol))].sort();

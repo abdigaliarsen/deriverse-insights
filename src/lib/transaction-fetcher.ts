@@ -22,11 +22,11 @@ export type ProgressCallback = (progress: FetchProgress) => void;
 
 // --- Constants ---
 
-const BATCH_SIZE = 5;
-const BATCH_DELAY_MS = 500;
+const BATCH_SIZE = 25;
+const BATCH_DELAY_MS = 100;
 const SIGNATURES_PER_PAGE = 1000;
 const MAX_RETRIES = 4;
-const RETRY_BASE_MS = 2000;
+const RETRY_BASE_MS = 1000;
 
 // --- Helpers ---
 
@@ -76,7 +76,6 @@ async function fetchSignatures(
     });
 
     if (batch.length < SIGNATURES_PER_PAGE) break;
-    await delay(BATCH_DELAY_MS);
   }
 
   return allSigs.slice(0, maxTx);
@@ -113,105 +112,44 @@ async function fetchOneTransaction(
   return null;
 }
 
-// --- Fetch transactions in batches ---
+// --- Decode a single transaction's logs ---
 
-async function fetchTransactionBatch(
+function decodeTxLogs(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  rpc: any,
-  signatures: string[],
-  onProgress?: ProgressCallback,
-  abortSignal?: AbortSignal
-): Promise<Map<string, { blockTime: number | null; logMessages: readonly string[] }>> {
-  const results = new Map<string, { blockTime: number | null; logMessages: readonly string[] }>();
-
-  for (let i = 0; i < signatures.length; i += BATCH_SIZE) {
-    if (abortSignal?.aborted) throw new Error("Aborted");
-
-    const batch = signatures.slice(i, i + BATCH_SIZE);
-    const promises = batch.map((sig) => fetchOneTransaction(rpc, sig));
-    const settled = await Promise.allSettled(promises);
-
-    for (let j = 0; j < settled.length; j++) {
-      const result = settled[j];
-      if (result.status === "fulfilled" && result.value) {
-        results.set(batch[j], result.value);
-      }
+  engine: any,
+  sig: string,
+  tx: { blockTime: number | null; logMessages: readonly string[] }
+): DecodedTransaction | null {
+  try {
+    const logs = engine.logsDecode(tx.logMessages as string[]);
+    if (logs && logs.length > 0) {
+      return { signature: sig, blockTime: tx.blockTime ?? 0, logs, slot: 0 };
     }
-
-    onProgress?.({
-      phase: "transactions",
-      current: Math.min(i + BATCH_SIZE, signatures.length),
-      total: signatures.length,
-      message: `Loading ${Math.min(i + BATCH_SIZE, signatures.length)}/${signatures.length} transactions...`,
-    });
-
-    if (i + BATCH_SIZE < signatures.length) {
-      await delay(BATCH_DELAY_MS);
-    }
+  } catch {
+    // Not a Deriverse transaction
   }
-
-  return results;
-}
-
-// --- Decode logs ---
-
-async function decodeLogs(
-  txMap: Map<string, { blockTime: number | null; logMessages: readonly string[] }>,
-  sigOrder: string[],
-  onProgress?: ProgressCallback
-): Promise<DecodedTransaction[]> {
-  const engine = await getInitializedEngine();
-  const results: DecodedTransaction[] = [];
-
-  for (let i = 0; i < sigOrder.length; i++) {
-    const sig = sigOrder[i];
-    const tx = txMap.get(sig);
-    if (!tx) continue;
-
-    try {
-      const logs = engine.logsDecode(tx.logMessages as string[]);
-      if (logs && logs.length > 0) {
-        results.push({
-          signature: sig,
-          blockTime: tx.blockTime ?? 0,
-          logs,
-          slot: 0,
-        });
-      }
-    } catch {
-      // Skip transactions that fail to decode (not Deriverse program txs)
-    }
-
-    if (i % 50 === 0) {
-      onProgress?.({
-        phase: "decoding",
-        current: i + 1,
-        total: sigOrder.length,
-        message: `Decoding ${i + 1}/${sigOrder.length}...`,
-      });
-    }
-  }
-
-  // Return in chronological order (oldest first)
-  return results.sort((a, b) => a.blockTime - b.blockTime);
+  return null;
 }
 
 // --- Public API ---
 
 /**
  * Fetch and decode all Deriverse transactions for a wallet.
- * Returns decoded transaction logs in chronological order (oldest first).
+ * Calls onDecodedBatch after each batch so the UI can reconstruct trades incrementally.
+ * Returns the final complete set of decoded transactions in chronological order.
  */
 export async function fetchWalletTransactions(
   walletAddress: string,
   options?: {
     maxTransactions?: number;
     onProgress?: ProgressCallback;
+    onDecodedBatch?: (allDecoded: DecodedTransaction[]) => void;
     abortSignal?: AbortSignal;
   }
 ): Promise<DecodedTransaction[]> {
   const maxTx = options?.maxTransactions ?? 2000;
   const onProgress = options?.onProgress;
+  const onDecodedBatch = options?.onDecodedBatch;
   const abortSignal = options?.abortSignal;
 
   // Use Helius RPC for better rate limits
@@ -227,19 +165,58 @@ export async function fetchWalletTransactions(
     return [];
   }
 
-  // Step 2: Fetch transaction details
+  // Step 2+3: Fetch transactions in batches, decode immediately, emit incrementally
+  const engine = await getInitializedEngine();
   const sigStrings = sigs.map((s) => s.signature);
-  const txMap = await fetchTransactionBatch(rpc, sigStrings, onProgress, abortSignal);
+  const allDecoded: DecodedTransaction[] = [];
 
-  // Step 3: Decode logs
-  const decoded = await decodeLogs(txMap, sigStrings, onProgress);
+  for (let i = 0; i < sigStrings.length; i += BATCH_SIZE) {
+    if (abortSignal?.aborted) throw new Error("Aborted");
+
+    const batch = sigStrings.slice(i, i + BATCH_SIZE);
+    const promises = batch.map((sig) => fetchOneTransaction(rpc, sig));
+    const settled = await Promise.allSettled(promises);
+
+    let batchHasNew = false;
+    for (let j = 0; j < settled.length; j++) {
+      const result = settled[j];
+      if (result.status === "fulfilled" && result.value) {
+        const decoded = decodeTxLogs(engine, batch[j], result.value);
+        if (decoded) {
+          allDecoded.push(decoded);
+          batchHasNew = true;
+        }
+      }
+    }
+
+    const fetched = Math.min(i + BATCH_SIZE, sigStrings.length);
+    onProgress?.({
+      phase: "transactions",
+      current: fetched,
+      total: sigStrings.length,
+      message: `Loading ${fetched}/${sigStrings.length} txs (${allDecoded.length} decoded)...`,
+    });
+
+    // Emit incremental update so the hook can reconstruct trades progressively
+    if (batchHasNew && onDecodedBatch) {
+      const sorted = [...allDecoded].sort((a, b) => a.blockTime - b.blockTime);
+      onDecodedBatch(sorted);
+    }
+
+    if (i + BATCH_SIZE < sigStrings.length) {
+      await delay(BATCH_DELAY_MS);
+    }
+  }
+
+  // Final sorted result
+  const finalDecoded = allDecoded.sort((a, b) => a.blockTime - b.blockTime);
 
   onProgress?.({
     phase: "done",
-    current: decoded.length,
-    total: decoded.length,
-    message: `Decoded ${decoded.length} transactions`,
+    current: finalDecoded.length,
+    total: finalDecoded.length,
+    message: `Decoded ${finalDecoded.length} transactions`,
   });
 
-  return decoded;
+  return finalDecoded;
 }

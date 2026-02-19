@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Trade } from "@/types/trading";
 import {
-  generateMockTrades,
   calculateDailyPnl,
   calculateSessionPerformance,
   calculateSymbolStats,
@@ -9,8 +8,8 @@ import {
 } from "@/lib/mock-data";
 import { calculateEquityCurve } from "@/lib/analytics";
 
-export function useTradingData(externalTrades?: Trade[]) {
-  const allTrades = useMemo(() => externalTrades ?? generateMockTrades(200), [externalTrades]);
+export function useTradingData(trades: Trade[]) {
+  const allTrades = trades;
   const [selectedSymbol, setSelectedSymbol] = useState<string>("all");
   const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({
     from: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),

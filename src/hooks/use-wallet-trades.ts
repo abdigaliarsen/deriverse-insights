@@ -50,6 +50,7 @@ export function useWalletTrades(): WalletTradesState {
     setIsLoading(true);
     setIsCached(false);
     setError(null);
+    setTrades([]);
     setProgress({ phase: "signatures", current: 0, total: 0, message: "Starting..." });
 
     try {
@@ -63,16 +64,20 @@ export function useWalletTrades(): WalletTradesState {
         onProgress: (p) => {
           if (!controller.signal.aborted) setProgress(p);
         },
+        onDecodedBatch: (decoded) => {
+          if (!controller.signal.aborted) {
+            const partial = reconstructTrades(decoded);
+            setTrades(partial);
+          }
+        },
         abortSignal: controller.signal,
       });
 
       if (controller.signal.aborted) return;
 
-      setProgress({ phase: "decoding", current: 0, total: 1, message: "Reconstructing trades..." });
-
       const reconstructed = reconstructTrades(decodedTxs);
 
-      // Cache results
+      // Cache final results
       setCachedTrades(walletAddr, reconstructed, decodedTxs.length);
 
       setTrades(reconstructed);

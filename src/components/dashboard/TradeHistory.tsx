@@ -6,14 +6,15 @@ import { sanitizeInput } from "@/lib/sanitize";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useTradeTags } from "@/hooks/use-trade-tags";
 import { TagManager, TagBadges } from "./TagManager";
-import { ChevronDown, ChevronUp, MessageSquare, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronUp, MessageSquare, ExternalLink, Loader2 } from "lucide-react";
 import { getMintForSymbol, solscanMintUrl } from "@/lib/deriverse-client";
 
 interface TradeHistoryProps {
   trades: Trade[];
+  isStreaming?: boolean;
 }
 
-export function TradeHistory({ trades }: TradeHistoryProps) {
+export function TradeHistory({ trades, isStreaming }: TradeHistoryProps) {
   const [sortField, setSortField] = useState<"exitTime" | "pnl" | "size">("exitTime");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -166,6 +167,13 @@ export function TradeHistory({ trades }: TradeHistoryProps) {
           </tbody>
         </table>
       </div>
+
+      {isStreaming && (
+        <div className="flex items-center justify-center gap-2 py-3 border-t border-border/30">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+          <span className="text-xs text-muted-foreground">Loading more trades...</span>
+        </div>
+      )}
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
