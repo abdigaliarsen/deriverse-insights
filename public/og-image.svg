@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="50%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#818cf8" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Subtle grid lines -->
+  <g stroke="#334155" stroke-width="0.5" opacity="0.3">
+    <line x1="0" y1="157" x2="1200" y2="157"/>
+    <line x1="0" y1="315" x2="1200" y2="315"/>
+    <line x1="0" y1="472" x2="1200" y2="472"/>
+    <line x1="300" y1="0" x2="300" y2="630"/>
+    <line x1="600" y1="0" x2="600" y2="630"/>
+    <line x1="900" y1="0" x2="900" y2="630"/>
+  </g>
+
+  <!-- Chart line (decorative) -->
+  <polyline points="100,420 200,400 320,380 440,350 520,310 600,340 680,280 760,260 840,300 920,240 1000,200 1100,180"
+    fill="none" stroke="url(#glow)" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="100,420 200,400 320,380 440,350 520,310 600,340 680,280 760,260 840,300 920,240 1000,200 1100,180"
+    fill="none" stroke="url(#accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Icon -->
+  <g transform="translate(440, 140)">
+    <rect width="56" height="56" rx="12" fill="#22d3ee" fill-opacity="0.15"/>
+    <polyline points="10,38 18,30 24,34 32,18 38,24 46,14" fill="none" stroke="url(#accent)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Title -->
+  <text x="510" y="185" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" fill="#f8fafc">Deriverse</text>
+  <text x="510" y="185" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700" fill="url(#accent)" dx="260"> Analytics</text>
+
+  <!-- Subtitle -->
+  <text x="600" y="225" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#94a3b8" letter-spacing="3">TRADING JOURNAL &amp; PORTFOLIO</text>
+
+  <!-- Bottom tagline -->
+  <text x="600" y="560" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#64748b">Real-time on-chain analytics for Solana traders</text>
+
+  <!-- Solana badge -->
+  <rect x="520" y="575" width="160" height="24" rx="12" fill="#334155" fill-opacity="0.6"/>
+  <circle cx="540" cy="587" r="5" fill="#9945FF"/>
+  <text x="552" y="592" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#94a3b8">Powered by Solana</text>
+</svg>
